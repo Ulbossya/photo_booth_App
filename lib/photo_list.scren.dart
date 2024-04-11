@@ -1,13 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:photo_booth_app/main.dart';
 import 'package:photo_booth_app/photo_detail_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(PhotoBoothApp());
-}
 
 
 class PhotoListScreen extends StatefulWidget {
@@ -21,7 +17,17 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
   @override
   void initState() {
     super.initState();
+    _checkFirstRun();
     _loadImages();
+  }
+
+  Future<void> _checkFirstRun() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool firstRun = prefs.getBool('firstRun') ?? true;
+    if (firstRun) {
+      _showWelcomeDialog();
+      await prefs.setBool('firstRun', false);
+    }
   }
 
   Future<void> _loadImages() async {
@@ -63,6 +69,26 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
     );
   }
 
+  Future<void> _showWelcomeDialog() async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Welcome to Photo Booth!"),
+          content: Text("Take and store photos in this app."),
+          actions: <Widget>[
+            TextButton(
+              child: Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,5 +122,8 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
     );
   }
 }
+
+
+
 
 
