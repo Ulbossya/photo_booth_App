@@ -13,7 +13,7 @@ class PhotoBoothApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: PhotoListScreen(), // Using the correct class name
+      home: PhotoListScreen(),
     );
   }
 }
