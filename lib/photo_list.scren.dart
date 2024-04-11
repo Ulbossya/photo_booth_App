@@ -1,7 +1,14 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'photo_detail_screen.dart';
+import 'package:photo_booth_app/main.dart';
+import 'package:photo_booth_app/photo_detail_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() {
+  runApp(PhotoBoothApp());
+}
+
 
 class PhotoListScreen extends StatefulWidget {
   @override
@@ -11,15 +18,41 @@ class PhotoListScreen extends StatefulWidget {
 class _PhotoListScreenState extends State<PhotoListScreen> {
   List<File> _images = [];
 
-  void _addImage(File image) {
+  @override
+  void initState() {
+    super.initState();
+    _loadImages();
+  }
+
+  Future<void> _loadImages() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> imagePaths = prefs.getStringList('imagePaths') ?? [];
     setState(() {
-      _images.add(image);
+      _images = imagePaths.map((path) => File(path)).toList();
     });
+  }
+
+  Future<void> _saveImages() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> imagePaths = _images.map((image) => image.path).toList();
+    await prefs.setStringList('imagePaths', imagePaths);
+  }
+
+  Future<void> _takePhoto() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      setState(() {
+        _images.add(File(pickedFile.path));
+        _saveImages();
+      });
+    }
   }
 
   void _removeImage(int index) {
     setState(() {
       _images.removeAt(index);
+      _saveImages();
     });
   }
 
@@ -28,14 +61,6 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
       context,
       MaterialPageRoute(builder: (context) => PhotoDetailScreen(image)),
     );
-  }
-
-  Future<void> _takePhoto() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
-      _addImage(File(pickedFile.path));
-    }
   }
 
   @override
@@ -71,3 +96,5 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
     );
   }
 }
+
+
